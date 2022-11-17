@@ -11,7 +11,6 @@ namespace AssemblyBrowserGUI
         {
             InitializeComponent();
 
-            this.DataContext = new ViewModel.ViewModel();
         }
     }
 }

@@ -69,10 +69,6 @@
     <Compile Include="ViewModel\Converters\MethodConverter.cs" />
     <Compile Include="ViewModel\Converters\PropertyConverter.cs" />
     <Compile Include="ViewModel\Converters\TypeConverter.cs" />
-    <Compile Include="ViewModel\DialogService\DefaultDialogService.cs" />
-    <Compile Include="ViewModel\DialogService\IDialogService.cs" />
-    <Compile Include="ViewModel\RelayCommand.cs" />
-    <Compile Include="ViewModel\ViewModel.cs" />
     <Compile Include="View\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

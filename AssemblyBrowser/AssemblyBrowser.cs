@@ -13,66 +13,73 @@ namespace AssemblyBrowserLib
         public AssemblyDO BrowseAssembly(Assembly assembly)
         {
             AssemblyDO res = new AssemblyDO(assembly.GetName().Name);
-            var definedTypes = assembly.GetTypes().ToList();
-            List<MethodInfo> extensionMethods = new List<MethodInfo>();
-
-            foreach (Type t in definedTypes)
-            {
-                if (!IsCompilerGenerated(t))
-                {
-                    if (!res.Namespaces.Any(ns => ns.Name == t.Namespace))
-                        res.Namespaces.Add(new NamespaceDO(t.Namespace));
-
-                    BindingFlags flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-                    TypeDO typeDO = new TypeDO(t);
-                    typeDO.Properties.AddRange(t.GetProperties(flags).Where(pi => !IsCompilerGenerated(pi)));
-                    typeDO.Fields.AddRange(t.GetFields(flags).Where(fi => !IsCompilerGenerated(fi)));
-
-                    if (t.IsAbstract && t.IsSealed)                 //Check for extension methods
-                        foreach (MethodInfo mi in t.GetMethods(flags).Where(mi => !IsCompilerGenerated(mi)))   
-                            if (mi.IsDefined(typeof(ExtensionAttribute)))
-                                extensionMethods.Add(mi);
-                            else typeDO.Methods.Add(mi);
-                    else typeDO.Methods.AddRange(t.GetMethods(flags).Where(mi => !IsCompilerGenerated(mi)));
-
-                    res.Namespaces.Find(ns => ns.Name == t.Namespace).Types.Add(typeDO);
-                }
-            }
-
-            extensionMethods.ForEach(mi =>
-            {
-                Type extendedType = mi.GetParameters()[0].ParameterType;
-                TypeDO typeDO = FindTypeDO(res, extendedType);
-                if (typeDO != null)
-                    typeDO.Methods.Add(mi);
-                else
-                {
-                    TypeDO extendedTypeDO = new TypeDO(extendedType);
-                    extendedTypeDO.Methods.Add(mi);
-                    NamespaceDO nsDO = res.Namespaces.Find(ns => ns.Name == extendedType.Namespace);
-                    if (nsDO != null)
-                        nsDO.Types.Add(extendedTypeDO);
-                    else
-                    {
-                        NamespaceDO extendedNSDO = new NamespaceDO(extendedType.Namespace);
-                        extendedNSDO.Types.Add(extendedTypeDO);
-                        res.Namespaces.Add(extendedNSDO);
-                    }
-                }
-            });
+            var extensionMethods = SelectExtensionMethods(assembly.GetTypes(), res);
+            Add(extensionMethods, res);
 
             return res;
         }
+        
+        private static IEnumerable<MethodInfo> SelectExtensionMethods(IEnumerable<Type> definedTypes, AssemblyDO res)
+        {
+           foreach (Type t in definedTypes)
+           {
+              if (!IsCompilerGenerated(t))
+              {
+                 if (res.Namespaces.All(ns => ns.Name != t.Namespace))
+                    res.Namespaces.Add(new NamespaceDO(t.Namespace));
 
-        private bool IsCompilerGenerated(MemberInfo type)
+                 const BindingFlags flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public |
+                                            BindingFlags.NonPublic;
+                 TypeDO typeDO = new TypeDO(t);
+                 typeDO.Properties.AddRange(t.GetProperties(flags).Where(pi => !IsCompilerGenerated(pi)));
+                 typeDO.Fields.AddRange(t.GetFields(flags).Where(fi => !IsCompilerGenerated(fi)));
+
+                 if (t.IsAbstract && t.IsSealed) //Check for extension methods
+                    foreach (MethodInfo mi in t.GetMethods(flags).Where(mi => !IsCompilerGenerated(mi)))
+                       if (mi.IsDefined(typeof(ExtensionAttribute)))
+                          yield return mi;
+                       else typeDO.Methods.Add(mi);
+                 else typeDO.Methods.AddRange(t.GetMethods(flags).Where(mi => !IsCompilerGenerated(mi)));
+
+                 res.Namespaces.Find(ns => ns.Name == t.Namespace).Types.Add(typeDO);
+              }
+           }
+        }
+
+        private static void Add(IEnumerable<MethodInfo> extensionMethods, AssemblyDO res)
+        {
+           foreach(var memberInfo in extensionMethods)
+           {
+              Type extendedType = memberInfo.GetParameters()[0].ParameterType;
+              TypeDO typeDO = FindTypeDO(res, extendedType);
+              if (typeDO != null)
+                 typeDO.Methods.Add(memberInfo);
+              else
+              {
+                 TypeDO extendedTypeDO = new TypeDO(extendedType);
+                 extendedTypeDO.Methods.Add(memberInfo);
+                 NamespaceDO nsDO = res.Namespaces.Find(ns => ns.Name == extendedType.Namespace);
+                 if (nsDO != null)
+                    nsDO.Types.Add(extendedTypeDO);
+                 else
+                 {
+                    NamespaceDO extendedNSDO = new NamespaceDO(extendedType.Namespace);
+                    extendedNSDO.Types.Add(extendedTypeDO);
+                    res.Namespaces.Add(extendedNSDO);
+                 }
+              }
+           }
+        }
+
+        private static bool IsCompilerGenerated(MemberInfo type)
         {
             return type.GetCustomAttribute<System.Runtime.CompilerServices.CompilerGeneratedAttribute>() != null;
         }
 
-        private TypeDO FindTypeDO(AssemblyDO asm, Type type)
+        private static TypeDO FindTypeDO(AssemblyDO asm, Type type)
         {
             NamespaceDO ns = asm.Namespaces.Find(nDO => nDO.Name == type.Namespace);
-            TypeDO typeDO = ns != null ? ns.Types.Find(t => t.Type == type) : null;
+            TypeDO typeDO = ns?.Types.Find(t => t.Type == type);
             return typeDO;
         }
     }

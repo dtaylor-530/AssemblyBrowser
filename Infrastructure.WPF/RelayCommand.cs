@@ -7,15 +7,15 @@ namespace AssemblyBrowserGUI.ViewModel
     /// A generic implementation of RelayCommand
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    class RelayCommand<T> : ICommand
+    public class RelayCommand<T> : ICommand
     {
         private readonly Predicate<T> _canExecute;
         private readonly Action<T> _action;
 
         public event EventHandler CanExecuteChanged
         {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
+            add => CommandManager.RequerySuggested += value;
+            remove => CommandManager.RequerySuggested -= value;
         }
 
         public RelayCommand(Action<T> action, Predicate<T> canExecute = null)

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AssemblyBrowser\AssemblyBrowser.csproj" />
+    <ProjectReference Include="..\Infrastructure.WPF\Infrastructure.WPF.csproj" />
+  </ItemGroup>
+
+</Project>

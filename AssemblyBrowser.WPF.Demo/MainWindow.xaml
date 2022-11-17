@@ -1,0 +1,92 @@
+﻿<Window x:Class="AssemblyBrowser.WPF.Demo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wpf="clr-namespace:AssemblyBrowser.WPF;assembly=AssemblyBrowser.WPF"
+        xmlns:DO="clr-namespace:AssemblyBrowserLib;assembly=AssemblyBrowser"
+        xmlns:converters="clr-namespace:AssemblyBrowserGUI.ViewModel.Converters;assembly=AssemblyBrowser.WPF"
+        xmlns:reflection="clr-namespace:System.Reflection;assembly=System.Runtime"
+        xmlns:viewModel="clr-namespace:AssemblyBrowserGUI.ViewModel;assembly=Infrastructure.WPF"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <FrameworkElement.Resources>
+
+        <converters:FieldConverter x:Key="FieldConverter"/>
+        <converters:PropertyConverter x:Key="PropertyConverter"/>
+        <converters:MethodConverter x:Key="MethodConverter"/>
+        <converters:TypeConverter x:Key="TypeConverter"/>
+
+
+        <DataTemplate DataType="{x:Type viewModel:ViewModel}">
+            <TreeViewItem
+                IsExpanded="true"
+                Header="{Binding Content}"
+                Background="LightBlue"
+                MinWidth="100"
+                MinHeight="100"
+                BorderThickness="0" ItemsSource="{Binding Collection}">
+            </TreeViewItem>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type DO:TypeDO}">
+            <TreeViewItem Header="{Binding Type, Converter={StaticResource TypeConverter}}">
+                <TreeViewItem ItemsSource="{Binding Methods}" Header="Methods"/>
+                <TreeViewItem ItemsSource="{Binding Properties}" Header="Properties"/>
+                <TreeViewItem ItemsSource="{Binding Fields}" Header="Fields"/>
+            </TreeViewItem>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type reflection:PropertyInfo}">
+            <TextBlock Text="{Binding Converter={StaticResource PropertyConverter}}"/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type reflection:FieldInfo}">
+            <TextBlock Text="{Binding Converter={StaticResource FieldConverter}}"/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type reflection:MethodInfo}">
+            <TextBlock Text="{Binding Converter={StaticResource MethodConverter}}"/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type wpf:CommandViewModel}">
+            <Border BorderBrush="Black" BorderThickness="2" >
+                <UniformGrid Rows="1" Background="Gold">
+                
+                    <Button MinHeight="35" Margin="5 5" 
+                            Content="{Binding Content}" 
+                            BorderThickness="5"
+                        Command="{Binding Command}"/>
+                  
+                </UniformGrid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type DO:AssemblyDO}">
+            <TreeViewItem ItemsSource="{Binding Namespaces}" Header="{Binding Name}" />
+        </DataTemplate>
+
+        <HierarchicalDataTemplate DataType ="{x:Type DO:NamespaceDO}" ItemsSource="{Binding Types}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Namespace: " FontStyle="Italic"/>
+                <TextBlock Text="{Binding Name}"/>
+                <TextBlock Text="[" Foreground="Blue"/>
+                <TextBlock Text="{Binding Types.Count}" Foreground="Blue"/>
+                <TextBlock Text="]" Foreground="Blue"/>
+            </StackPanel>
+        </HierarchicalDataTemplate>
+
+        <!--<Border BorderThickness="1" BorderBrush="LightGray"/>-->
+
+        <!--<DataTemplate DataType="{x:Type wpf:AssemblyViewModel}">
+            <TreeView Margin="10" BorderThickness="0">
+                <ContentControl Content="{Binding Collection }"></ContentControl>
+            </TreeView>
+        </DataTemplate>-->
+
+    </FrameworkElement.Resources>
+    <FrameworkElement.DataContext>
+        <wpf:RootViewModel/>
+    </FrameworkElement.DataContext>
+
+    <Grid>
+        <ContentControl Content="{Binding }"></ContentControl>
+    </Grid>
+
+</Window>
